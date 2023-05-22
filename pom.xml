@@ -21,7 +21,7 @@
 
         <jenkins.version>2.375.1</jenkins.version>
         <jenkins-tools-bom.artifactId>bom-2.375.x</jenkins-tools-bom.artifactId>
-        <jenkins-tools-bom.version>1981.v17df70e84a_a_1</jenkins-tools-bom.version>
+        <jenkins-tools-bom.version>2102.v854b_fec19c92</jenkins-tools-bom.version>
 
         <gitHubRepo>jenkinsci/${project.artifactId}-plugin</gitHubRepo>
 
