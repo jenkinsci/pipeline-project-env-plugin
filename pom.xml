@@ -25,7 +25,7 @@
 
         <gitHubRepo>jenkinsci/${project.artifactId}-plugin</gitHubRepo>
 
-        <immutable.version>2.10.0</immutable.version>
+        <immutable.version>2.10.1</immutable.version>
         <assertj-core.version>3.24.2</assertj-core.version>
     </properties>
 
