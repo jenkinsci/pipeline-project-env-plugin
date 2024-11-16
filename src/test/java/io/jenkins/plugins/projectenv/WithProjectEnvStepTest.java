@@ -1,5 +1,6 @@
 package io.jenkins.plugins.projectenv;
 
+import hudson.model.Descriptor;
 import hudson.model.Label;
 import hudson.model.Result;
 import org.apache.commons.io.IOUtils;
@@ -108,7 +109,7 @@ public class WithProjectEnvStepTest {
         return IOUtils.toString(getClass().getResource(resource), StandardCharsets.UTF_8);
     }
 
-    private CpsFlowDefinition createOsSpecificPipelineDefinition(String pipelineDefinition) {
+    private CpsFlowDefinition createOsSpecificPipelineDefinition(String pipelineDefinition) throws Descriptor.FormException {
         return new CpsFlowDefinition(SystemUtils.IS_OS_WINDOWS ?
                 pipelineDefinition.replace("sh", "bat") :
                 pipelineDefinition, true);
