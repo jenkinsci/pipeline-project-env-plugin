@@ -1,5 +1,6 @@
 package io.jenkins.plugins.projectenv;
 
+import hudson.model.Descriptor;
 import hudson.model.Label;
 import hudson.model.Result;
 import org.apache.commons.io.IOUtils;
@@ -55,7 +56,7 @@ public class WithProjectEnvStepTest {
 
         WorkflowRun run = jenkins.assertBuildStatus(Result.SUCCESS, project.scheduleBuild2(0));
         assertThat(run.getLog())
-                // assert that the JDK (including native-image)  has been installed
+                // assert that the JDK (including native-image) has been installed
                 .contains("installing jdk...")
                 .contains("openjdk version \"17.0.9\" 2023-10-17")
                 .contains("native-image 17.0.9 2023-10-17")
@@ -94,11 +95,11 @@ public class WithProjectEnvStepTest {
     @WithTimeout(600)
     public void testStepExecutionWithNonExistingConfigFile() throws Exception {
         WorkflowJob project = jenkins.createProject(WorkflowJob.class);
-        project.setDefinition(createOsSpecificPipelineDefinition("" +
-                "node('slave') {\n" +
-                "  withProjectEnv(cliVersion: '3.4.1', cliDebug: true) {\n" +
-                "  }\n" +
-                "}"));
+        project.setDefinition(createOsSpecificPipelineDefinition("""
+                node('slave') {
+                  withProjectEnv(cliVersion: '3.4.1', cliDebug: true) {
+                  }
+                }"""));
 
         WorkflowRun run = jenkins.assertBuildStatus(Result.FAILURE, project.scheduleBuild2(0));
         assertThat(run.getLog()).contains("failed to install tools: FileNotFoundException");
@@ -108,7 +109,7 @@ public class WithProjectEnvStepTest {
         return IOUtils.toString(getClass().getResource(resource), StandardCharsets.UTF_8);
     }
 
-    private CpsFlowDefinition createOsSpecificPipelineDefinition(String pipelineDefinition) {
+    private CpsFlowDefinition createOsSpecificPipelineDefinition(String pipelineDefinition) throws Descriptor.FormException {
         return new CpsFlowDefinition(SystemUtils.IS_OS_WINDOWS ?
                 pipelineDefinition.replace("sh", "bat") :
                 pipelineDefinition, true);

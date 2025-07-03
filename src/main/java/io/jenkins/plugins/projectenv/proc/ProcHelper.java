@@ -50,7 +50,7 @@ public final class ProcHelper {
 
             return ImmutableProcResult.builder()
                     .exitCode(exitCode)
-                    .stdOutput(stdOutInputStream.toString(StandardCharsets.UTF_8.name()))
+                    .stdOutput(stdOutInputStream.toString(StandardCharsets.UTF_8))
                     .build();
         }
     }
@@ -59,7 +59,7 @@ public final class ProcHelper {
         PrintStream logger = StepContextHelper.getTaskListener(context).getLogger();
 
         Thread thread = new Thread(() -> {
-            try (Scanner scanner = new Scanner(stdErrInputStream, StandardCharsets.UTF_8.name())) {
+            try (Scanner scanner = new Scanner(stdErrInputStream, StandardCharsets.UTF_8)) {
                 while (scanner.hasNextLine()) {
                     logger.println(scanner.nextLine());
                 }
