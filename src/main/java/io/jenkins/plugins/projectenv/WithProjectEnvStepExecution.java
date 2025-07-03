@@ -1,5 +1,6 @@
 package io.jenkins.plugins.projectenv;
 
+import edu.umd.cs.findbugs.annotations.NonNull;
 import hudson.EnvVars;
 import hudson.FilePath;
 import hudson.Util;
@@ -25,7 +26,6 @@ import org.jenkinsci.plugins.workflow.steps.EnvironmentExpander;
 import org.jenkinsci.plugins.workflow.steps.GeneralNonBlockingStepExecution;
 import org.jenkinsci.plugins.workflow.steps.StepContext;
 
-import javax.annotation.Nonnull;
 import java.io.IOException;
 import java.net.URI;
 import java.nio.charset.StandardCharsets;
@@ -196,29 +196,19 @@ public class WithProjectEnvStepExecution extends GeneralNonBlockingStepExecution
 
     private String getCliTargetOs(AgentInfo agentInfo) {
         OperatingSystem operatingSystem = agentInfo.getOperatingSystem();
-        switch (operatingSystem) {
-            case WINDOWS:
-                return CLI_TARGET_OS_WINDOWS;
-            case MACOS:
-                return CLI_TARGET_OS_MACOS;
-            case LINUX:
-                return CLI_TARGET_OS_LINUX;
-            default:
-                throw new IllegalArgumentException("unexpected value " + operatingSystem + " received");
-        }
+        return switch (operatingSystem) {
+            case WINDOWS -> CLI_TARGET_OS_WINDOWS;
+            case MACOS -> CLI_TARGET_OS_MACOS;
+            case LINUX -> CLI_TARGET_OS_LINUX;
+        };
     }
 
     private String getCliArchiveExtension(AgentInfo agentInfo) {
         OperatingSystem operatingSystem = agentInfo.getOperatingSystem();
-        switch (operatingSystem) {
-            case WINDOWS:
-                return CLI_ARCHIVE_EXTENSION_ZIP;
-            case MACOS:
-            case LINUX:
-                return CLI_ARCHIVE_EXTENSION_TAR_GZ;
-            default:
-                throw new IllegalArgumentException("unexpected value " + operatingSystem + " received");
-        }
+        return switch (operatingSystem) {
+            case WINDOWS -> CLI_ARCHIVE_EXTENSION_ZIP;
+            case MACOS, LINUX -> CLI_ARCHIVE_EXTENSION_TAR_GZ;
+        };
     }
 
     private String getCliTargetArchitecture() {
@@ -336,7 +326,7 @@ public class WithProjectEnvStepExecution extends GeneralNonBlockingStepExecution
         return EnvironmentExpander
                 .merge(getContext().get(EnvironmentExpander.class), new EnvironmentExpander() {
                     @Override
-                    public void expand(@Nonnull EnvVars originalEnvVars) {
+                    public void expand(@NonNull EnvVars originalEnvVars) {
                         originalEnvVars.overrideAll(projectEnvVars);
                     }
                 });
