@@ -1,5 +1,6 @@
 package io.jenkins.plugins.projectenv;
 
+import edu.umd.cs.findbugs.annotations.NonNull;
 import hudson.EnvVars;
 import hudson.FilePath;
 import hudson.Util;
@@ -25,7 +26,6 @@ import org.jenkinsci.plugins.workflow.steps.EnvironmentExpander;
 import org.jenkinsci.plugins.workflow.steps.GeneralNonBlockingStepExecution;
 import org.jenkinsci.plugins.workflow.steps.StepContext;
 
-import javax.annotation.Nonnull;
 import java.io.IOException;
 import java.net.URI;
 import java.nio.charset.StandardCharsets;
@@ -336,7 +336,7 @@ public class WithProjectEnvStepExecution extends GeneralNonBlockingStepExecution
         return EnvironmentExpander
                 .merge(getContext().get(EnvironmentExpander.class), new EnvironmentExpander() {
                     @Override
-                    public void expand(@Nonnull EnvVars originalEnvVars) {
+                    public void expand(@NonNull EnvVars originalEnvVars) {
                         originalEnvVars.overrideAll(projectEnvVars);
                     }
                 });
