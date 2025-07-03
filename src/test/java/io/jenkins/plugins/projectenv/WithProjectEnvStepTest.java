@@ -7,34 +7,35 @@ import org.apache.commons.lang3.SystemUtils;
 import org.jenkinsci.plugins.workflow.cps.CpsFlowDefinition;
 import org.jenkinsci.plugins.workflow.job.WorkflowJob;
 import org.jenkinsci.plugins.workflow.job.WorkflowRun;
-import org.junit.Before;
-import org.junit.Rule;
-import org.junit.Test;
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.Timeout;
 import org.jvnet.hudson.test.JenkinsRule;
-import org.jvnet.hudson.test.recipes.WithTimeout;
+import org.jvnet.hudson.test.junit.jupiter.WithJenkins;
 
 import java.io.IOException;
 import java.nio.charset.StandardCharsets;
 
 import static org.assertj.core.api.Assertions.assertThat;
 
-public class WithProjectEnvStepTest {
+@WithJenkins
+class WithProjectEnvStepTest {
 
-    @Rule
-    public JenkinsRule jenkins = new JenkinsRule();
+    private JenkinsRule j;
 
-    @Before
-    public void startSlave() throws Exception {
-        jenkins.createSlave(Label.get("slave"));
+    @BeforeEach
+    void setUp(JenkinsRule rule) throws Exception {
+        j = rule;
+        j.createSlave(Label.get("slave"));
     }
 
     @Test
-    @WithTimeout(600)
-    public void testStepExecution() throws Exception {
+    @Timeout(600)
+    void testStepExecution() throws Exception {
         String projectEnvConfigFileContent = readTestResource("project-env.toml");
         String userSettingsFileContent = readTestResource("user_settings.xml");
 
-        WorkflowJob project = jenkins.createProject(WorkflowJob.class);
+        WorkflowJob project = j.createProject(WorkflowJob.class);
         project.setDefinition(createOsSpecificPipelineDefinition("" +
                 "node('slave') {\n" +
                 "  writeFile text: '''" + projectEnvConfigFileContent + "''', file: 'project-env.toml'\n" +
@@ -53,9 +54,9 @@ public class WithProjectEnvStepTest {
                 "  }\n" +
                 "}"));
 
-        WorkflowRun run = jenkins.assertBuildStatus(Result.SUCCESS, project.scheduleBuild2(0));
+        WorkflowRun run = j.assertBuildStatus(Result.SUCCESS, project.scheduleBuild2(0));
         assertThat(run.getLog())
-                // assert that the JDK (including native-image)  has been installed
+                // assert that the JDK (including native-image) has been installed
                 .contains("installing jdk...")
                 .contains("openjdk version \"17.0.9\" 2023-10-17")
                 .contains("native-image 17.0.9 2023-10-17")
@@ -75,11 +76,11 @@ public class WithProjectEnvStepTest {
     }
 
     @Test
-    @WithTimeout(600)
-    public void testStepExecutionWithCustomConfigFileLocation() throws Exception {
+    @Timeout(600)
+    void testStepExecutionWithCustomConfigFileLocation() throws Exception {
         String projectEnvConfigFileContent = readTestResource("project-env-empty.toml");
 
-        WorkflowJob project = jenkins.createProject(WorkflowJob.class);
+        WorkflowJob project = j.createProject(WorkflowJob.class);
         project.setDefinition(createOsSpecificPipelineDefinition("" +
                 "node('slave') {\n" +
                 "  writeFile text: '" + projectEnvConfigFileContent + "', file: 'etc/project-env.toml'\n" +
@@ -87,20 +88,20 @@ public class WithProjectEnvStepTest {
                 "  }\n" +
                 "}"));
 
-        jenkins.assertBuildStatus(Result.SUCCESS, project.scheduleBuild2(0));
+        j.assertBuildStatus(Result.SUCCESS, project.scheduleBuild2(0));
     }
 
     @Test
-    @WithTimeout(600)
-    public void testStepExecutionWithNonExistingConfigFile() throws Exception {
-        WorkflowJob project = jenkins.createProject(WorkflowJob.class);
+    @Timeout(600)
+    void testStepExecutionWithNonExistingConfigFile() throws Exception {
+        WorkflowJob project = j.createProject(WorkflowJob.class);
         project.setDefinition(createOsSpecificPipelineDefinition("" +
                 "node('slave') {\n" +
                 "  withProjectEnv(cliVersion: '3.4.1', cliDebug: true) {\n" +
                 "  }\n" +
                 "}"));
 
-        WorkflowRun run = jenkins.assertBuildStatus(Result.FAILURE, project.scheduleBuild2(0));
+        WorkflowRun run = j.assertBuildStatus(Result.FAILURE, project.scheduleBuild2(0));
         assertThat(run.getLog()).contains("failed to install tools: FileNotFoundException");
     }
 
