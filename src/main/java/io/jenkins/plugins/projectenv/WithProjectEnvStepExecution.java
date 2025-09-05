@@ -101,7 +101,7 @@ public class WithProjectEnvStepExecution extends GeneralNonBlockingStepExecution
         Map<String, List<ToolInfo>> allToolInfos = executeProjectEnvCli(executable);
         processToolInfos(projectEnvVars, allToolInfos, agentInfo);
 
-        BodyExecutionCallback callback = createTempDirectoryCleanupCallback(temporaryDirectory);
+        BodyExecutionCallback callback = createCleanupCallback(temporaryDirectory);
         invokeBodyWithEnvVarsAndCallback(projectEnvVars, callback);
     }
 
@@ -315,11 +315,18 @@ public class WithProjectEnvStepExecution extends GeneralNonBlockingStepExecution
                 "\"`dirname \"$0\"`/_`basename \"$0\"`\" -s \"" + mavenUserSettingsPath + "\" $*";
     }
 
-    private BodyExecutionCallback createTempDirectoryCleanupCallback(FilePath tempDirectory) {
+    private BodyExecutionCallback createCleanupCallback(FilePath tempDirectory) {
         return new TailCall() {
             @Override
-            protected void finished(StepContext context) throws Exception {
-                tempDirectory.deleteRecursive();
+            protected void finished(StepContext context) {
+                try {
+                    tempDirectory.deleteRecursive();
+                } catch (IOException | InterruptedException e) {
+                    // swallow, because we should not do I/O here, see finished doc:
+                    // This method will run in the CPS VM thread and as such should not perform I/O or block
+                    // In recent Jenkins versions, this callback is called too late
+                    // and the connection to the agent is already closed
+                }
             }
         };
     }
