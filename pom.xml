@@ -27,7 +27,7 @@
         <ban-junit4-imports.skip>false</ban-junit4-imports.skip>
 
         <immutable.version>2.10.0</immutable.version>
-        <assertj-core.version>3.24.2</assertj-core.version>
+        <assertj-core.version>3.27.4</assertj-core.version>
     </properties>
 
     <name>Pipeline Project-Env Plugin</name>
