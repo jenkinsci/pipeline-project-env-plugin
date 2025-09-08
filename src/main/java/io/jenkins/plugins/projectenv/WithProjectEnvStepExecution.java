@@ -196,29 +196,19 @@ public class WithProjectEnvStepExecution extends GeneralNonBlockingStepExecution
 
     private String getCliTargetOs(AgentInfo agentInfo) {
         OperatingSystem operatingSystem = agentInfo.getOperatingSystem();
-        switch (operatingSystem) {
-            case WINDOWS:
-                return CLI_TARGET_OS_WINDOWS;
-            case MACOS:
-                return CLI_TARGET_OS_MACOS;
-            case LINUX:
-                return CLI_TARGET_OS_LINUX;
-            default:
-                throw new IllegalArgumentException("unexpected value " + operatingSystem + " received");
-        }
+        return switch (operatingSystem) {
+            case WINDOWS -> CLI_TARGET_OS_WINDOWS;
+            case MACOS -> CLI_TARGET_OS_MACOS;
+            case LINUX -> CLI_TARGET_OS_LINUX;
+        };
     }
 
     private String getCliArchiveExtension(AgentInfo agentInfo) {
         OperatingSystem operatingSystem = agentInfo.getOperatingSystem();
-        switch (operatingSystem) {
-            case WINDOWS:
-                return CLI_ARCHIVE_EXTENSION_ZIP;
-            case MACOS:
-            case LINUX:
-                return CLI_ARCHIVE_EXTENSION_TAR_GZ;
-            default:
-                throw new IllegalArgumentException("unexpected value " + operatingSystem + " received");
-        }
+        return switch (operatingSystem) {
+            case WINDOWS -> CLI_ARCHIVE_EXTENSION_ZIP;
+            case MACOS, LINUX -> CLI_ARCHIVE_EXTENSION_TAR_GZ;
+        };
     }
 
     private String getCliTargetArchitecture() {
@@ -316,7 +306,7 @@ public class WithProjectEnvStepExecution extends GeneralNonBlockingStepExecution
     }
 
     private BodyExecutionCallback createTempDirectoryCleanupCallback(FilePath tempDirectory) {
-        return new TailCall() {
+        return new GeneralNonBlockingStepExecution.TailCall() {
             @Override
             protected void finished(StepContext context) throws Exception {
                 tempDirectory.deleteRecursive();
