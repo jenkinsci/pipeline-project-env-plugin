@@ -56,6 +56,7 @@ public class WithProjectEnvStepExecution extends GeneralNonBlockingStepExecution
     private static final String CLI_TARGET_OS_LINUX = "linux";
 
     private static final String CLI_TARGET_ARCH_AMD_64 = "amd64";
+    private static final String CLI_TARGET_ARCH_AARCH64 = "aarch64";
 
     private static final String PATH_VAR_PREFIX = "PATH+";
 
@@ -65,17 +66,15 @@ public class WithProjectEnvStepExecution extends GeneralNonBlockingStepExecution
     private final String fixedCliVersion;
     private final boolean cliDebug;
     private final String configFile;
+    private final boolean skipCleanup;
 
-    public WithProjectEnvStepExecution(StepContext stepContext, boolean cliDebug, String configFile) {
-        this(stepContext, cliDebug, configFile, null);
-    }
-
-    public WithProjectEnvStepExecution(StepContext stepContext, boolean cliDebug, String configFile, String fixedCliVersion) {
+    public WithProjectEnvStepExecution(StepContext stepContext, boolean cliDebug, String configFile, String fixedCliVersion, boolean skipCleanup) {
         super(stepContext);
 
         this.fixedCliVersion = fixedCliVersion;
         this.cliDebug = cliDebug;
         this.configFile = configFile;
+        this.skipCleanup = skipCleanup;
     }
 
     @Override
@@ -113,12 +112,12 @@ public class WithProjectEnvStepExecution extends GeneralNonBlockingStepExecution
             return null;
         }
 
-        return stdOut.split(agentInfo.getLineSeparator())[0];
+        return stdOut.split(agentInfo.lineSeparator())[0];
     }
 
     private String[] getExecutablePathResolveCommand(AgentInfo agentInfo) {
         String executable = getProjectEnvCliExecutableName(agentInfo);
-        if (agentInfo.getOperatingSystem() == OperatingSystem.WINDOWS) {
+        if (agentInfo.operatingSystem() == OperatingSystem.WINDOWS) {
             return new String[]{"where", executable};
         } else {
             return new String[]{"/bin/sh", "-c", "which " + executable};
@@ -153,7 +152,7 @@ public class WithProjectEnvStepExecution extends GeneralNonBlockingStepExecution
     private String createProjectEnvCliArchiveUrl(AgentInfo agentInfo) {
         String cliTargetOs = getCliTargetOs(agentInfo);
         String cliArchiveExtension = getCliArchiveExtension(agentInfo);
-        String cliTargetArchitecture = getCliTargetArchitecture();
+        String cliTargetArchitecture = getCliTargetArchitecture(agentInfo);
 
         return MessageFormat.format(PROJECT_ENV_CLI_DOWNLOAD_PATTERN, getCliVersion(), cliTargetOs, cliTargetArchitecture, cliArchiveExtension);
     }
@@ -195,7 +194,7 @@ public class WithProjectEnvStepExecution extends GeneralNonBlockingStepExecution
     }
 
     private String getCliTargetOs(AgentInfo agentInfo) {
-        OperatingSystem operatingSystem = agentInfo.getOperatingSystem();
+        OperatingSystem operatingSystem = agentInfo.operatingSystem();
         return switch (operatingSystem) {
             case WINDOWS -> CLI_TARGET_OS_WINDOWS;
             case MACOS -> CLI_TARGET_OS_MACOS;
@@ -204,15 +203,19 @@ public class WithProjectEnvStepExecution extends GeneralNonBlockingStepExecution
     }
 
     private String getCliArchiveExtension(AgentInfo agentInfo) {
-        OperatingSystem operatingSystem = agentInfo.getOperatingSystem();
+        OperatingSystem operatingSystem = agentInfo.operatingSystem();
         return switch (operatingSystem) {
             case WINDOWS -> CLI_ARCHIVE_EXTENSION_ZIP;
             case MACOS, LINUX -> CLI_ARCHIVE_EXTENSION_TAR_GZ;
         };
     }
 
-    private String getCliTargetArchitecture() {
-        return CLI_TARGET_ARCH_AMD_64;
+    private String getCliTargetArchitecture(AgentInfo agentInfo) {
+        var architecture = agentInfo.architecture();
+        return switch (architecture) {
+            case AMD64 -> CLI_TARGET_ARCH_AMD_64;
+            case AARCH64 -> CLI_TARGET_ARCH_AARCH64;
+        };
     }
 
     private void extractProjectEnvCliArchive(FilePath archive, FilePath target) throws Exception {
@@ -238,18 +241,18 @@ public class WithProjectEnvStepExecution extends GeneralNonBlockingStepExecution
     }
 
     private String getExecutableExtension(AgentInfo agentInfo) {
-        return agentInfo.getOperatingSystem() == OperatingSystem.WINDOWS ?
+        return agentInfo.operatingSystem() == OperatingSystem.WINDOWS ?
                 CLI_EXECUTABLE_FILE_EXTENSION_WINDOWS : CLI_EXECUTABLE_FILE_EXTENSION_OTHERS;
     }
 
     private Map<String, List<ToolInfo>> executeProjectEnvCli(String executable) throws Exception {
         String[] commands = createProjectEnvCliCommand(executable);
         ProcResult procResult = ProcHelper.execute(getContext(), commands);
-        if (procResult.getExitCode() != 0) {
-            throw new IllegalStateException("received non-zero exit code " + procResult.getExitCode() + " from Project-Env CLI");
+        if (procResult.exitCode() != 0) {
+            throw new IllegalStateException("received non-zero exit code " + procResult.exitCode() + " from Project-Env CLI");
         }
 
-        return ToolInfoParser.fromJson(procResult.getStdOutput());
+        return ToolInfoParser.fromJson(procResult.stdOutput());
     }
 
     private String[] createProjectEnvCliCommand(String executable) {
@@ -266,14 +269,14 @@ public class WithProjectEnvStepExecution extends GeneralNonBlockingStepExecution
     private void processToolInfos(EnvVars envVars, Map<String, List<ToolInfo>> allToolInfos, AgentInfo agentInfo) throws Exception {
         for (Map.Entry<String, List<ToolInfo>> entry : allToolInfos.entrySet()) {
             for (ToolInfo toolInfo : entry.getValue()) {
-                List<String> pathElements = toolInfo.getPathElements();
+                List<String> pathElements = toolInfo.pathElements();
                 for (int i = 0; i < pathElements.size(); i++) {
                     String pathElement = pathElements.get(i);
 
                     envVars.put(PATH_VAR_PREFIX + StringUtils.upperCase(entry.getKey()) + "_" + i, pathElement);
                 }
 
-                envVars.putAll(toolInfo.getEnvironmentVariables());
+                envVars.putAll(toolInfo.environmentVariables());
 
                 if (StringUtils.equals(entry.getKey(), PROJECT_ENV_MAVEN_TOOL_NAME)) {
                     handleMavenUserSettings(toolInfo, agentInfo);
@@ -283,11 +286,11 @@ public class WithProjectEnvStepExecution extends GeneralNonBlockingStepExecution
     }
 
     private void handleMavenUserSettings(ToolInfo toolInfo, AgentInfo agentInfo) throws Exception {
-        String mavenUserSettingsPath = MapUtils.getString(toolInfo.getUnhandledProjectResources(), PROJECT_ENV_MAVEN_USER_SETTINGS_FILE);
-        if (mavenUserSettingsPath != null && agentInfo.getOperatingSystem() == OperatingSystem.LINUX) {
+        String mavenUserSettingsPath = MapUtils.getString(toolInfo.unhandledProjectResources(), PROJECT_ENV_MAVEN_USER_SETTINGS_FILE);
+        if (mavenUserSettingsPath != null && agentInfo.operatingSystem() != OperatingSystem.WINDOWS) {
             FilePath workspace = StepContextHelper.getWorkspace(getContext());
 
-            FilePath primaryExecutable = workspace.child(toolInfo.getPrimaryExecutable().get());
+            FilePath primaryExecutable = workspace.child(toolInfo.primaryExecutable());
             FilePath primaryExecutableParent = primaryExecutable.getParent();
             if (primaryExecutableParent == null) {
                 throw new IllegalStateException();
@@ -309,7 +312,9 @@ public class WithProjectEnvStepExecution extends GeneralNonBlockingStepExecution
         return new GeneralNonBlockingStepExecution.TailCall() {
             @Override
             protected void finished(StepContext context) throws Exception {
-                tempDirectory.deleteRecursive();
+                if (!skipCleanup) {
+                    tempDirectory.deleteRecursive();
+                }
             }
         };
     }

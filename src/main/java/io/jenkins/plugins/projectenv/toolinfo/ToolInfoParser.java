@@ -22,7 +22,7 @@ public final class ToolInfoParser {
     }
 
     public static Gson createGson() {
-        return new GsonBuilder().registerTypeAdapterFactory(new GsonAdaptersToolInfo()).create();
+        return new GsonBuilder().create();
     }
 
 }

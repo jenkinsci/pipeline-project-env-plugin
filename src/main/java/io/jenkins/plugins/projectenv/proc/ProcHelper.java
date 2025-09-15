@@ -17,8 +17,8 @@ public final class ProcHelper {
 
     public static String executeAndGetStdOut(StepContext context, String... commands) throws Exception {
         ProcResult procResult = execute(context, commands);
-        if (procResult.getExitCode() == 0) {
-            return procResult.getStdOutput();
+        if (procResult.exitCode() == 0) {
+            return procResult.stdOutput();
         } else {
             return null;
         }
@@ -48,9 +48,9 @@ public final class ProcHelper {
             }
             stdErrThread.join();
 
-            return ImmutableProcResult.builder()
+            return ProcResult.builder()
                     .exitCode(exitCode)
-                    .stdOutput(stdOutInputStream.toString(StandardCharsets.UTF_8.name()))
+                    .stdOutput(stdOutInputStream.toString(StandardCharsets.UTF_8))
                     .build();
         }
     }
@@ -59,7 +59,7 @@ public final class ProcHelper {
         PrintStream logger = StepContextHelper.getTaskListener(context).getLogger();
 
         Thread thread = new Thread(() -> {
-            try (Scanner scanner = new Scanner(stdErrInputStream, StandardCharsets.UTF_8.name())) {
+            try (Scanner scanner = new Scanner(stdErrInputStream, StandardCharsets.UTF_8)) {
                 while (scanner.hasNextLine()) {
                     logger.println(scanner.nextLine());
                 }

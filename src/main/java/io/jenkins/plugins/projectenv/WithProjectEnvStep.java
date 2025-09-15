@@ -16,6 +16,7 @@ public class WithProjectEnvStep extends Step {
     private String cliVersion;
     private boolean cliDebug;
     private String configFile = "project-env.toml";
+    private boolean skipCleanup;
 
     @DataBoundConstructor
     public WithProjectEnvStep() {
@@ -37,13 +38,14 @@ public class WithProjectEnvStep extends Step {
         this.configFile = configFile;
     }
 
-    @Override
-    public StepExecution start(StepContext stepContext) throws Exception {
-        if (cliVersion != null) {
-            return new WithProjectEnvStepExecution(stepContext, cliDebug, configFile, cliVersion);
-        }
+    @DataBoundSetter
+    public void setSkipCleanup(boolean skipCleanup) {
+        this.skipCleanup = skipCleanup;
+    }
 
-        return new WithProjectEnvStepExecution(stepContext, cliDebug, configFile);
+    @Override
+    public StepExecution start(StepContext stepContext) {
+            return new WithProjectEnvStepExecution(stepContext, cliDebug, configFile, cliVersion, skipCleanup);
     }
 
     @Extension
