@@ -26,8 +26,8 @@
 
         <ban-junit4-imports.skip>false</ban-junit4-imports.skip>
 
-        <immutable.version>2.11.3</immutable.version>
         <assertj-core.version>3.27.4</assertj-core.version>
+        <lombok.version>1.18.40</lombok.version>
     </properties>
 
     <name>Pipeline Project-Env Plugin</name>
@@ -56,15 +56,9 @@
             <artifactId>commons-lang3-api</artifactId>
         </dependency>
         <dependency>
-            <groupId>org.immutables</groupId>
-            <artifactId>value</artifactId>
-            <version>${immutable.version}</version>
-            <scope>provided</scope>
-        </dependency>
-        <dependency>
-            <groupId>org.immutables</groupId>
-            <artifactId>gson</artifactId>
-            <version>${immutable.version}</version>
+            <groupId>org.projectlombok</groupId>
+            <artifactId>lombok</artifactId>
+            <version>${lombok.version}</version>
             <scope>provided</scope>
         </dependency>
 

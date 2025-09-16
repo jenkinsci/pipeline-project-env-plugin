@@ -37,41 +37,43 @@ class WithProjectEnvStepTest {
         String userSettingsFileContent = readTestResource("user_settings.xml");
 
         WorkflowJob project = j.createProject(WorkflowJob.class);
-        project.setDefinition(createOsSpecificPipelineDefinition("" +
-                "node('slave') {\n" +
-                "  writeFile text: '''" + projectEnvConfigFileContent + "''', file: 'project-env.toml'\n" +
-                "  writeFile text: '''" + userSettingsFileContent + "''', file: 'user_settings.xml'\n" +
-                "  println \"PATH: ${env.PATH}\"\n" +
-                "  withProjectEnv(cliDebug: true) {\n" +
-                "    println \"PATH: ${env.PATH}\"\n" +
-                "    sh 'java -version'\n" +
-                "    sh 'native-image --version'\n" +
-                "    sh 'mvn --version'\n" +
-                "    sh 'mvn help:evaluate -Dexpression=settings.localRepository -q -DforceStdout'\n" +
-                "    sh 'gradle --version'\n" +
-                "    sh 'node --version'\n" +
-                "    sh 'yarn --version'\n" +
-                "    sh 'which project-env-cli'\n" +
-                "  }\n" +
-                "}"));
+        String pipeline = """
+                node('slave') {
+                  writeFile text: '''%s''', file: 'project-env.toml'
+                  writeFile text: '''%s''', file: 'user_settings.xml'
+                  println "PATH: ${env.PATH}"
+                  withProjectEnv(cliDebug: true) {
+                    println "PATH: ${env.PATH}"
+                    sh 'java -version'
+                    sh 'native-image --version'
+                    sh 'mvn --version'
+                    sh 'mvn help:evaluate -Dexpression=settings.localRepository -q -DforceStdout'
+                    sh 'gradle --version'
+                    sh 'node --version'
+                    sh 'yarn --version'
+                    sh 'which project-env-cli'
+                  }
+                }
+                """.formatted(projectEnvConfigFileContent, userSettingsFileContent);
+        project.setDefinition(createOsSpecificPipelineDefinition(pipeline));
 
         WorkflowRun run = j.assertBuildStatus(Result.SUCCESS, project.scheduleBuild2(0));
         assertThat(run.getLog())
                 // assert that the JDK (including native-image) has been installed
                 .contains("installing jdk...")
-                .contains("openjdk version \"17.0.9\" 2023-10-17")
-                .contains("native-image 17.0.9 2023-10-17")
+                .contains("openjdk version \"21.0.2\" 2024-01-16")
+                .contains("native-image 21.0.2 2024-01-16")
                 // assert that Maven has been installed
                 .contains("installing maven...")
                 .contains("Apache Maven 3.8.4 (9b656c72d54e5bacbed989b64718c159fe39b537)")
                 .contains("/tmp/m2repo")
                 // assert that Gradle has been installed
                 .contains("installing gradle...")
-                .contains("Gradle 7.3")
+                .contains("Gradle 9.0.0")
                 // assert that NodeJS (including yarn) has been installed
                 .contains("installing nodejs...")
-                .contains("v17.2.0")
-                .contains("1.22.18")
+                .contains("v22.19.0")
+                .contains("1.22.22")
                 // assert that Project-Env CLI is on the PATH
                 .containsPattern("workspace/test\\d+@tmp/withProjectEnv[^/]+/project-env-cli");
     }
@@ -82,12 +84,14 @@ class WithProjectEnvStepTest {
         String projectEnvConfigFileContent = readTestResource("project-env-empty.toml");
 
         WorkflowJob project = j.createProject(WorkflowJob.class);
-        project.setDefinition(createOsSpecificPipelineDefinition("" +
-                "node('slave') {\n" +
-                "  writeFile text: '" + projectEnvConfigFileContent + "', file: 'etc/project-env.toml'\n" +
-                "  withProjectEnv(cliVersion: '3.4.1', cliDebug: true, configFile: 'etc/project-env.toml') {\n" +
-                "  }\n" +
-                "}"));
+        String pipeline = """
+                node('slave') {
+                  writeFile text: '%s', file: 'etc/project-env.toml'
+                  withProjectEnv(cliDebug: true, configFile: 'etc/project-env.toml') {
+                  }
+                }
+                """.formatted(projectEnvConfigFileContent);
+        project.setDefinition(createOsSpecificPipelineDefinition(pipeline));
 
         j.assertBuildStatus(Result.SUCCESS, project.scheduleBuild2(0));
     }
@@ -96,11 +100,13 @@ class WithProjectEnvStepTest {
     @Timeout(600)
     void testStepExecutionWithNonExistingConfigFile() throws Exception {
         WorkflowJob project = j.createProject(WorkflowJob.class);
-        project.setDefinition(createOsSpecificPipelineDefinition("" +
-                "node('slave') {\n" +
-                "  withProjectEnv(cliVersion: '3.4.1', cliDebug: true) {\n" +
-                "  }\n" +
-                "}"));
+        String pipeline = """
+                node('slave') {
+                  withProjectEnv(cliDebug: true) {
+                  }
+                }
+                """;
+        project.setDefinition(createOsSpecificPipelineDefinition(pipeline));
 
         WorkflowRun run = j.assertBuildStatus(Result.FAILURE, project.scheduleBuild2(0));
         assertThat(run.getLog()).contains("failed to install tools: FileNotFoundException");

@@ -1,17 +1,18 @@
 package io.jenkins.plugins.projectenv.agent;
 
 import jenkins.security.MasterToSlaveCallable;
+import org.apache.commons.lang.StringUtils;
 import org.apache.commons.lang.SystemUtils;
 
 public class AgentInfoCallable extends MasterToSlaveCallable<AgentInfo, Exception> {
 
     @Override
-    public AgentInfo call() throws Exception {
-        OperatingSystem operatingSystem = getOperatingSystem();
-
-        return ImmutableAgentInfo.builder()
+    public AgentInfo call() {
+        return AgentInfo.builder()
                 .lineSeparator(System.lineSeparator())
-                .operatingSystem(operatingSystem).build();
+                .operatingSystem(getOperatingSystem())
+                .architecture(getArchitecture())
+                .build();
     }
 
     private OperatingSystem getOperatingSystem() {
@@ -23,6 +24,14 @@ public class AgentInfoCallable extends MasterToSlaveCallable<AgentInfo, Exceptio
             return OperatingSystem.LINUX;
         } else {
             throw new IllegalStateException("unsupported OS " + SystemUtils.OS_NAME);
+        }
+    }
+
+    private Architecture getArchitecture() {
+        if (StringUtils.equalsIgnoreCase(SystemUtils.OS_ARCH, "aarch64")) {
+            return Architecture.AARCH64;
+        } else {
+            return Architecture.AMD64;
         }
     }
 

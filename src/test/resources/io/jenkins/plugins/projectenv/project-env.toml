@@ -1,19 +1,16 @@
 tools_directory = ".tools"
 
 [jdk]
-distribution = "GraalVM CE 17"
-distribution_version = "23.0.2"
-post_extraction_commands = [
-    "gu install native-image"
-]
+distribution = "GraalVM CE 21"
+distribution_version = "23.1.2"
 
 [maven]
 version = "3.8.4"
 user_settings_file = "user_settings.xml"
 
 [gradle]
-version = "7.3"
+version = "9.0.0"
 
 [nodejs]
-version = "17.2.0"
-post_extraction_commands = ["npm install -g yarn@1.22.18"]
+version = "22.19.0"
+post_extraction_commands = ["npm install -g yarn@1.22.22"]

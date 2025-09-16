@@ -1,11 +1,10 @@
 package io.jenkins.plugins.projectenv.proc;
 
-import org.immutables.value.Value;
+import lombok.Builder;
 
-@Value.Immutable
-@Value.Style(jdkOnly = true)
-public interface ProcResult {
-    int getExitCode();
-
-    String getStdOutput();
+@Builder
+public record ProcResult(
+        int exitCode,
+        String stdOutput
+) {
 }
