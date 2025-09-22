@@ -26,7 +26,7 @@
 
         <ban-junit4-imports.skip>false</ban-junit4-imports.skip>
 
-        <assertj-core.version>3.27.4</assertj-core.version>
+        <assertj-core.version>3.27.5</assertj-core.version>
         <lombok.version>1.18.40</lombok.version>
     </properties>
 
