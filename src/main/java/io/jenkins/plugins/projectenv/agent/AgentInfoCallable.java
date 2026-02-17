@@ -1,8 +1,8 @@
 package io.jenkins.plugins.projectenv.agent;
 
 import jenkins.security.MasterToSlaveCallable;
-import org.apache.commons.lang.StringUtils;
-import org.apache.commons.lang.SystemUtils;
+import org.apache.commons.lang3.StringUtils;
+import org.apache.commons.lang3.SystemUtils;
 
 public class AgentInfoCallable extends MasterToSlaveCallable<AgentInfo, Exception> {
 

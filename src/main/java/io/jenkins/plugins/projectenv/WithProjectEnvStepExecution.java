@@ -11,9 +11,8 @@ import io.jenkins.plugins.projectenv.proc.ProcHelper;
 import io.jenkins.plugins.projectenv.proc.ProcResult;
 import io.jenkins.plugins.projectenv.toolinfo.ToolInfo;
 import io.jenkins.plugins.projectenv.toolinfo.ToolInfoParser;
-import org.apache.commons.collections.MapUtils;
 import org.apache.commons.io.FilenameUtils;
-import org.apache.commons.lang.StringUtils;
+import org.apache.commons.lang3.StringUtils;
 import org.apache.http.Header;
 import org.apache.http.client.methods.CloseableHttpResponse;
 import org.apache.http.client.methods.HttpUriRequest;
@@ -25,7 +24,7 @@ import org.jenkinsci.plugins.workflow.steps.EnvironmentExpander;
 import org.jenkinsci.plugins.workflow.steps.GeneralNonBlockingStepExecution;
 import org.jenkinsci.plugins.workflow.steps.StepContext;
 
-import javax.annotation.Nonnull;
+import edu.umd.cs.findbugs.annotations.NonNull;
 import java.io.IOException;
 import java.net.URI;
 import java.nio.charset.StandardCharsets;
@@ -286,7 +285,7 @@ public class WithProjectEnvStepExecution extends GeneralNonBlockingStepExecution
     }
 
     private void handleMavenUserSettings(ToolInfo toolInfo, AgentInfo agentInfo) throws Exception {
-        String mavenUserSettingsPath = MapUtils.getString(toolInfo.unhandledProjectResources(), PROJECT_ENV_MAVEN_USER_SETTINGS_FILE);
+        String mavenUserSettingsPath = toolInfo.unhandledProjectResources().get(PROJECT_ENV_MAVEN_USER_SETTINGS_FILE);
         if (mavenUserSettingsPath != null && agentInfo.operatingSystem() != OperatingSystem.WINDOWS) {
             FilePath workspace = StepContextHelper.getWorkspace(getContext());
 
@@ -331,7 +330,7 @@ public class WithProjectEnvStepExecution extends GeneralNonBlockingStepExecution
         return EnvironmentExpander
                 .merge(getContext().get(EnvironmentExpander.class), new EnvironmentExpander() {
                     @Override
-                    public void expand(@Nonnull EnvVars originalEnvVars) {
+                    public void expand(@NonNull EnvVars originalEnvVars) {
                         originalEnvVars.overrideAll(projectEnvVars);
                     }
                 });
