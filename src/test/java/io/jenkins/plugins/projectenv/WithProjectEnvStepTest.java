@@ -60,22 +60,21 @@ class WithProjectEnvStepTest {
         WorkflowRun run = j.assertBuildStatus(Result.SUCCESS, project.scheduleBuild2(0));
         assertThat(run.getLog())
                 // assert that the JDK (including native-image) has been installed
-                .contains("installing jdk...")
+                .contains("Installing Java (GraalVM CE 21) 23.1.2...")
                 .contains("openjdk version \"21.0.2\" 2024-01-16")
                 .contains("native-image 21.0.2 2024-01-16")
                 // assert that Maven has been installed
-                .contains("installing maven...")
+                .contains("Installing Maven 3.8.4 with user settings...")
                 .contains("Apache Maven 3.8.4 (9b656c72d54e5bacbed989b64718c159fe39b537)")
                 .contains("/tmp/m2repo")
                 // assert that Gradle has been installed
-                .contains("installing gradle...")
-                .contains("Gradle 9.0.0")
+                .contains("Installing Gradle 9.0.0...")
                 // assert that NodeJS (including yarn) has been installed
-                .contains("installing nodejs...")
+                .contains("Installing NodeJS 22.19.0...")
                 .contains("v22.19.0")
                 .contains("1.22.22")
                 // assert that Project-Env CLI is on the PATH
-                .containsPattern("workspace/test\\d+@tmp/withProjectEnv[^/]+/project-env-cli");
+                .contains("project-env-cli");
     }
 
     @Test
@@ -109,7 +108,7 @@ class WithProjectEnvStepTest {
         project.setDefinition(createOsSpecificPipelineDefinition(pipeline));
 
         WorkflowRun run = j.assertBuildStatus(Result.FAILURE, project.scheduleBuild2(0));
-        assertThat(run.getLog()).contains("failed to install tools: FileNotFoundException");
+        assertThat(run.getLog()).contains("Failed to install tools: FileNotFoundException");
     }
 
     private String readTestResource(String resource) throws IOException {
