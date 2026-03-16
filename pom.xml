@@ -28,7 +28,7 @@
         <ban-commons-lang-2.skip>false</ban-commons-lang-2.skip>
 
         <assertj-core.version>3.27.7</assertj-core.version>
-        <lombok.version>1.18.42</lombok.version>
+        <lombok.version>1.18.44</lombok.version>
     </properties>
 
     <name>Pipeline Project-Env Plugin</name>
