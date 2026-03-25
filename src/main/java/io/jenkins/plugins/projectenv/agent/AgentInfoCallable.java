@@ -1,10 +1,9 @@
 package io.jenkins.plugins.projectenv.agent;
 
-import jenkins.security.MasterToSlaveCallable;
-import org.apache.commons.lang3.StringUtils;
+import jenkins.agents.ControllerToAgentCallable;
 import org.apache.commons.lang3.SystemUtils;
 
-public class AgentInfoCallable extends MasterToSlaveCallable<AgentInfo, Exception> {
+public class AgentInfoCallable implements ControllerToAgentCallable<AgentInfo, Exception> {
 
     @Override
     public AgentInfo call() {
@@ -28,7 +27,7 @@ public class AgentInfoCallable extends MasterToSlaveCallable<AgentInfo, Exceptio
     }
 
     private Architecture getArchitecture() {
-        if (StringUtils.equalsIgnoreCase(SystemUtils.OS_ARCH, "aarch64")) {
+        if (SystemUtils.OS_ARCH.equalsIgnoreCase("aarch64")) {
             return Architecture.AARCH64;
         } else {
             return Architecture.AMD64;
